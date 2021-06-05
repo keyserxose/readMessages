@@ -152,7 +152,7 @@ def getId():
 
 #Write Sqlite DB
 def writeId():
-    cursor.execute('INSERT INTO messages(messageid, message, user, first_name, date) VALUES(?, ?, ?, ?, datetime())',(message_id, text, username, first_name, ))
+    cursor.execute('INSERT INTO messages(messageid, message, user, first_name, chatname, date) VALUES(?, ?, ?, ?, ?, datetime())',(message_id, text, username, first_name, chatName, ))
     db.commit()
 
 
@@ -179,8 +179,9 @@ while True:
         message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
         userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
         username = json_data['result'][0]['message']['from']['username'] # This gets the username
-        first_name = json_data['result'][0]['message']['chat']['first_name'] # This gets the first_name
+        first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
         chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+        chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
     except KeyError: #This deals with the exceptions
         print(datetime.now())
         print("An Exception has ocurred, will keep going")
