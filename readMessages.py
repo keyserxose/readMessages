@@ -16,11 +16,6 @@ import json
 import configparser
 import getpass
 import sqlite3
-# Enable this in order to get Raspberry Pi Temp
-#from gpiozero import CPUTemperature
-#if os.system("uname -a | grep raspberry") == True:
-#else:
-#    pass
 
 #Getting hostname
 host = os.uname()[1]
@@ -28,14 +23,12 @@ host = os.uname()[1]
 #Getting username
 user = getpass.getuser()
 
-
 #Reading from the current path
 path = __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #Define your config, db and log file here
 config_file = path+'/readMessages.conf'
-#pathTodb = path+'/dbId.db'
 pathTolog = path+'/readMessages.log'
 
 #Database location
@@ -51,11 +44,6 @@ botchat = int(config['CHATS']['botchat'])
 myid = int(config['USERS']['myid'])
 alexid = int(config['USERS']['alexid'])
 faid = int(config['USERS']['faid'])
-btcholdings = float(config['CRYPTO']['btcholdings'])
-ethholdings = float(config['CRYPTO']['ethholdings'])
-ltcholdings = float(config['CRYPTO']['ltcholdings'])
-xrpholdings = int(config['CRYPTO']['xrpholdings'])
-
 
 #Whitelist
 whitelist=[myid,faid,alexid]
@@ -80,36 +68,15 @@ hitchhiker2 = "What is the meaning of life?"
 # If a command is not added here it will show as an error
 tinydict = {ip,mycrypto,mybtc,myeth,myltc,myxrp,temp,help,hitchhiker1,hitchhiker2}
 
-#Getting IP
-#get_ip = requests.get('https://ipinfo.io/ip')
-
 
 #GET JSON DATA from Telegram API - DEV
 receive_data="https://api.telegram.org/bot"+str(apiKey_dev)+"/GetUpdates?offset=-1&limit=1"
 
 
-#Messages
-#ip_message = 'This is your ip: '+get_ip.text.strip('\n')
-
-help_message = "I need somebody"
-
-hitchhiker_message = "42"
-
-error_message = "IP hasn't changed or the command is incorrect"
-
-error_message2 = "Command not found"
-
-error_message3 = "Trespassers will be shot, survivors will be shot again"
-
-error_message4 = "Unable to provide the requested information"
-
-# Variables for the Crypto Function
-currentprice = 'https://www.bitstamp.net/api/v2/ticker/'
-
 
 # Send function
-def send():
-    requests.post(bot_chat+message)
+#def send():
+#    requests.post(bot_chat+message)
 
 
 
@@ -125,24 +92,9 @@ def writeLog():
     logFile.close()
 
 
-#Read DB function
-def readDbFile():
-    global pathTodb
-    pathTodb = ''
-    global dbFile
-    dbFile = open(pathTodb,'r')
-    global readlastline
-    readlastline = dbFile.readline()
-    dbFile.close()
 
-#Write DB function
-def writeDbFile():
-    dbFile = open(pathTodb,'w')
-    dbFile.write(str(message_id))
-    dbFile.close()
 
 #SQLITE FUNCTIONS
-
 #Read from Sqlite DB
 def getId():
     global lastid
@@ -155,13 +107,28 @@ def writeId():
     cursor.execute('INSERT INTO messages(messageid, message, user, first_name, chatname, date) VALUES(?, ?, ?, ?, ?, datetime())',(message_id, text, username, first_name, chatName, ))
     db.commit()
 
+#Seach for a message to edit
+#def getupdatedMsg():
+#    cursor.execute('SELECT messageid FROM messages WHERE messageid = ?', (editedMsgId,))
+
+#Update the message
+def updateMsg():
+    cursor.execute('UPDATE messages set message = ?, edited = ?, updated_date = ? where messageid = ?', (editedMsg, edited, editedMsgdate, editedMsgId,))
+    db.commit()
+
+## Add function here to check the edit_date in the DB so we don't edit the record every time
+def checkIfupdated():
+    cursor.execute('SELECT updated_date FROM messages WHERE messageid = ?', (editedMsgId,))
+    global updated_date
+    updated_date = cursor.fetchone()
+
+
 
 #Enable Logging
 #logging = 'false'
 
 #Enable verbose mode
 verbose = 'true'
-
 
 while True:
     
@@ -171,7 +138,19 @@ while True:
     except requests.ConnectionError:
         pass
 
-    
+    message_id = None
+    editedMsgId = None
+    editedMsg = None
+    #editedMsgdate = None
+
+    text = None
+    message_id = None
+    userid = None
+    username = None
+    first_name = None
+    chatid = None
+    chatName = None
+
     
 #Reading JSON Data
     try:
@@ -183,8 +162,14 @@ while True:
         chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
         chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
     except KeyError: #This deals with the exceptions
+        editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
+        editedMsgId = json_data['result'][0]['edited_message']['message_id'] # This gets the edited message ID
+        editedMsgdate = json_data['result'][0]['edited_message']['edit_date'] # This gets the edited message date
+        date = json_data['result'][0]['edited_message']['date'] # This gets the original message date
         print(datetime.now())
-        print("An Exception has ocurred, will keep going")
+        print("An Exception has ocurred, we will keep going")
+        pass
+    except NameError:
         pass
 
     #Read DB File
@@ -193,9 +178,25 @@ while True:
     # Read from SQLITE DB
     getId()
 
+    # Check Edited message date
+    checkIfupdated()
+
+    #print('This is the message id in case this is a new message: '+str(message_id))
+
+    #print('This is the Edited Message ID: '+str(editedMsgId))
+
+    #print('This is the new text for the edited message: '+str(editedMsg))
+
+    #print('This is the last id in the DB: '+str(lastid[0]))
+
+    #print(editedMsgdate)
+
+    #print(updated_date[0])
+
+    #print(editedMsgId)
     #Checking if message has been sent
-    if int((lastid)[0]) == message_id:
-        print("Checking SQLITE DB, Message has already been sent")
+    #if int((lastid)[0]) == message_id:
+    #    print("Checking SQLITE DB, Message has already been sent")
         #time.sleep(2)
     #Sending Messages 
         
@@ -205,24 +206,40 @@ while True:
     #writeDbFile()
 
     # Write to SQlite DB and close connection
-    if message_id != int((lastid)[0]):
+    if message_id != None and message_id != int((lastid)[0]):
         writeId()
         print('Adding record to DB')
+    elif editedMsgId != None and editedMsgId == int((lastid)[0]) and editedMsgdate != (updated_date[0]):
+        edited = 1
+        updateMsg()
+        print('Updating Message')
+        #print(editedMsg)
+        #print(editedMsgdate)
+        #print(updated_date)
+    
     else:
         print('Record already exists')
 
+    #time.sleep(5)
+
     #db.close()
+
+    #if editedMsgId == int((lastid)[0]):
+    #    updateMsg()
+    #    print('Updating Message')
+
+
 
     if verbose == "true":
         #print(json_data)
         #print(time)
-        print(text)
+        #print(text)
         print(log_time)
-        print("This is the message that we are getting from the JSON DATA: "+str(message_id))
-        print("This is the last line that was written to the DB: "+str(lastid[0]))
+        #print("This is the message that we are getting from the JSON DATA: "+str(message_id))
+        #print("This is the last line that was written to the DB: "+str(lastid[0]))
         #print(userid)
         #print(new_id)
         #print (json.dumps(json_data,ensure_ascii=False,indent=2))
 
-    #time.sleep(2)
+    #time.sleep(3)
     #break
