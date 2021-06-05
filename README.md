@@ -7,4 +7,3 @@
 * Images
 * GPS
 * Replies
-* 
