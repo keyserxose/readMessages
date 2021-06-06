@@ -39,7 +39,7 @@ apiKey_dev = config['DEFAULT']['ApiKey_DEV']
 botchat = int(config['CHATS']['botchat'])
 
 #Misc Variables
-log_time = datetime.now()
+
 
 #GET JSON DATA from Telegram API - DEV
 receive_data="https://api.telegram.org/bot"+str(apiKey_dev)+"/GetUpdates?offset=-1&limit=1"
@@ -67,23 +67,34 @@ def getId():
 
 #Write Sqlite DB
 def writeId():
-    cursor.execute('INSERT INTO messages(messageid, message, user, first_name, chatname, date) VALUES(?, ?, ?, ?, ?, datetime())',(message_id, text, username, first_name, chatName, ))
+    cursor.execute('INSERT INTO messages(messageid, message, user, firstname, chatname, date) VALUES(?, ?, ?, ?, ?, datetime())',(message_id, text, username, first_name, chatName, ))
     db.commit()
 
-#Seach for a message to edit
-#def getupdatedMsg():
-#    cursor.execute('SELECT messageid FROM messages WHERE messageid = ?', (editedMsgId,))
+#Update functions below
+def updateEditedflag():
+    cursor.execute('UPDATE messages set edited = ?, updateddate = ?', (edited, editedMsgdate,))
+    db.commit()
 
-#Update the message
 def updateMsg():
-    cursor.execute('UPDATE messages set message = ?, edited = ?, updated_date = ? where messageid = ?', (editedMsg, edited, editedMsgdate, editedMsgId,))
+    cursor.execute('SELECT messageid, message FROM messages where messageid = ?', (editedMsgId,))
+    origMsg = cursor.fetchone()
+    cursor.execute('INSERT INTO updatedmessages(messageid, originalmessage, updatedmessage, updateddate, date) VALUES(?,?,?,?,datetime())' ,(origMsg[0], origMsg[1], editedMsg, editedMsgdate,))
     db.commit()
 
-## Add function here to check the edit_date in the DB so we don't edit the record every time
+def updateMsgagain():
+    cursor.execute('UPDATE updatedmessages set updatedmessage = ?, updateddate = ?, date = datetime() where messageid = ?', (editedMsg, editedMsgdate, editedMsgId,))
+    db.commit()
+
+def getUpdateddate():
+    global lastupdate
+    cursor.execute('SELECT updateddate FROM updatedmessages where messageid = ?', (editedMsgId,))
+    lastupdate = cursor.fetchone()
+
 def checkIfupdated():
-    cursor.execute('SELECT updated_date FROM messages WHERE messageid = ?', (editedMsgId,))
+    cursor.execute('SELECT updateddate FROM messages WHERE messageid = ?', (editedMsgId,))
     global updated_date
     updated_date = cursor.fetchone()
+
 
 
 
@@ -94,6 +105,8 @@ def checkIfupdated():
 verbose = 'true'
 
 while True:
+
+    log_time = datetime.now()
     
     try:
         new_request = requests.get(receive_data) 
@@ -114,8 +127,8 @@ while True:
 
     
     # This deals with normal messages in group chats
-    if 'message' in json_data['result'][0] and  json_data['result'][0]['message']['chat']['type'] == 'group':
-        print('This is an anything in a group')
+    if 'message' in json_data['result'][0] and json_data['result'][0]['message']['chat']['type'] == 'group':
+        print('This is anything in a group')
         if 'text' in json_data['result'][0]['message']:
             print('This is a message')
             text = json_data['result'][0]['message']['text'] # This gets the message
@@ -130,7 +143,7 @@ while True:
 
     # This deals with edited messages in group chats
     elif 'edited_message' in json_data['result'][0] and json_data['result'][0]['edited_message']['chat']['type'] == 'group':
-        print('This anythin edited message in a group')
+        print('This is anything edited in a group')
         if 'text' in json_data['result'][0]['edited_message']:
             print('This is an edited message')
             editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
@@ -156,7 +169,7 @@ while True:
 
     # This deals with edited messages in private chats
     elif 'edited_message' in json_data['result'][0] and json_data['result'][0]['edited_message']['chat']['type'] == 'private':
-        print('This anything edited in a private chat')
+        print('This is anything edited in a private chat')
         if 'text' in json_data['result'][0]['edited_message']:
             print('This is an edited message')
             editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
@@ -176,6 +189,9 @@ while True:
     # Check Edited message date
     checkIfupdated()
 
+    # Check if the date in the updated messages table has changed
+    getUpdateddate()    
+
     
     # Write to SQlite DB and close connection
     if message_id != None and message_id != int((lastid)[0]):
@@ -183,8 +199,18 @@ while True:
         print('Adding record to DB')
     elif editedMsgId != None and editedMsgId == int((lastid)[0]) and editedMsgdate != (updated_date[0]):
         edited = 1
-        updateMsg()
-        print('Updating Message')
+        if updated_date[0] == None:
+            print('Updating Message')
+            updateMsg()
+            updateEditedflag()
+        elif updated_date[0] != editedMsgdate and editedMsgdate != (lastupdate[0]):
+            updateMsgagain()
+            print('Record has been updated again')
+            print(updated_date[0])
+            print(editedMsgdate)
+            print(lastupdate[0])
+        else:
+            print('Record has been updated already')
     
     else:
         print('Record already exists or is not the type of record that gets added to the DB')
@@ -201,5 +227,5 @@ while True:
         #print(new_id)
         #print (json.dumps(json_data,ensure_ascii=False,indent=2))
 
-    time.sleep(5)
+    #time.sleep(5)
     #break
