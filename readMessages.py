@@ -143,7 +143,7 @@ while True:
     editedMsg = None
     #editedMsgdate = None
 
-    text = None
+    #text = None
     message_id = None
     userid = None
     username = None
@@ -151,26 +151,158 @@ while True:
     chatid = None
     chatName = None
 
+    #text = None
+    #photo = None
+
+    #test = json_data['result'][0]['edited_message']
+    #print(test)
+
+    #break
+
+    #time.sleep(5)
+
+    #try:
+    #    if 'message' in json_data['result'][0]:
+    #        print('This is an normal message')
+    #    elif 'photo' in json_data['result'][0]['message']:
+    #        print('This is a photo')
+    #    elif 'edited_message' in json_data['result'][0]:
+    #        print('This is an edited message')
+    #    else:
+    #        print('This is other type of message')
+    #except:
+    #    print('Nothin')
+    #    pass
+    #
+    #break
+    # This deals with normal messages in group chats
+    if 'message' in json_data['result'][0] and  json_data['result'][0]['message']['chat']['type'] == 'group':
+        print('This is an anything in a group')
+        if 'text' in json_data['result'][0]['message']:
+            print('This is a message')
+            text = json_data['result'][0]['message']['text'] # This gets the message
+            message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
+            userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
+            username = json_data['result'][0]['message']['from']['username'] # This gets the username
+            first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
+            chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+            chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
+        else:
+            print('Whatever this is, I dont care for it')
+
+    # This deals with edited messages in group chats
+    elif 'edited_message' in json_data['result'][0] and json_data['result'][0]['edited_message']['chat']['type'] == 'group':
+        print('This anythin edited message in a group')
+        if 'text' in json_data['result'][0]['edited_message']:
+            print('This is an edited message')
+            editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
+            editedMsgId = json_data['result'][0]['edited_message']['message_id'] # This gets the edited message ID
+            editedMsgdate = json_data['result'][0]['edited_message']['edit_date'] # This gets the edited message date
+            date = json_data['result'][0]['edited_message']['date'] # This gets the original message date
+        else:
+            print('Whatever this is, I dont care for it')
+
+    # This deals with normal messages in private chats
+    elif 'message' in json_data['result'][0] and json_data['result'][0]['message']['chat']['type'] == 'private':
+        print('This is anything in a private chat')
+        if 'text' in json_data['result'][0]['message']:
+            print('This is a message')
+            text = json_data['result'][0]['message']['text'] # This gets the message
+            message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
+            userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
+            username = json_data['result'][0]['message']['from']['username'] # This gets the username
+            first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
+            chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+        else:
+            print('Whatever this is, I dont care for it')
+        #elif 'photo' in json_data['result'][0]['message']:
+        #    print('This is a photo')
+        #elif 'animation' in json_data['result'][0]['message']:
+        #    print('this is a GIF')
+        #elif 'poll' in json_data['result'][0]['message']:
+        #    print('This is a poll')
+
+    # This deals with edited messages in private chats
+    elif 'edited_message' in json_data['result'][0] and json_data['result'][0]['edited_message']['chat']['type'] == 'private':
+        print('This anything edited in a private chat')
+        if 'text' in json_data['result'][0]['edited_message']:
+            print('This is an edited message')
+            editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
+            editedMsgId = json_data['result'][0]['edited_message']['message_id'] # This gets the edited message ID
+            editedMsgdate = json_data['result'][0]['edited_message']['edit_date'] # This gets the edited message date
+            date = json_data['result'][0]['edited_message']['date'] # This gets the original message date
+        else:
+            print('Whatever this is, I dont care for it')
+        #elif 'photo' in json_data['result'][0]['edited_message']:
+        #    print('This is a photo')
+        #elif 'animation' in json_data['result'][0]['edited_message']:
+        #    print('this is a GIF')
+        
+        #try:
+        #    text = json_data['result'][0]['message']['text'] # This gets the message
+        #    message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
+        #    userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
+        #    username = json_data['result'][0]['message']['from']['username'] # This gets the username
+        #    first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
+        #    chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+        #except KeyError:
+        #    photo = json_data['result'][0]['message']['photo'] # This gets the message
+        #    print("DB doesn't allow to save photos, an Exception has occurred, we will keep going")
+        #    pass
+        #except KeyError:
+        #    animation = json_data['result'][0]['message']['animation']
+        #    print("DB doesn't allow to save GIFs, an Exception has occurred, we will keep going")
+        #    pass
+    
+    else:
+        print('This is other type of message')
+
+    
+    #time.sleep(3)
+    #break
+
+    #Geeting the type of chat (group or private)
+    #try:
+    #    chatType = json_data[0][1]['message']['chat']['type']
+    #except KeyError:
+    #    chatType = json_data[5]
+
+#READING JSON
+    #if chatType == 'group':
+    #    try:
+    #        text = json_data['result'][0]['message']['text'] # This gets the message
+    #        message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
+    #        userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
+    #        username = json_data['result'][0]['message']['from']['username'] # This gets the username
+    #        first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
+    #        chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+    #        chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
+    #    except KeyError:
+    #        editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
+    #        editedMsgId = json_data['result'][0]['edited_message']['message_id'] # This gets the edited message ID
+    #        editedMsgdate = json_data['result'][0]['edited_message']['edit_date'] # This gets the edited message date
+    #        date = json_data['result'][0]['edited_message']['date'] # This gets the original message date
+    #        pass
     
 #Reading JSON Data
-    try:
-        text = json_data['result'][0]['message']['text'] # This gets the message
-        message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
-        userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
-        username = json_data['result'][0]['message']['from']['username'] # This gets the username
-        first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
-        chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
-        chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
-    except KeyError: #This deals with the exceptions
-        editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
-        editedMsgId = json_data['result'][0]['edited_message']['message_id'] # This gets the edited message ID
-        editedMsgdate = json_data['result'][0]['edited_message']['edit_date'] # This gets the edited message date
-        date = json_data['result'][0]['edited_message']['date'] # This gets the original message date
-        print(datetime.now())
-        print("An Exception has ocurred, we will keep going")
-        pass
-    except NameError:
-        pass
+    #try:
+    #    text = json_data['result'][0]['message']['text'] # This gets the message
+    #    message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
+    #    userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
+    #    username = json_data['result'][0]['message']['from']['username'] # This gets the username
+    #    first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
+    #    chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+    #    chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
+    #except KeyError: #This deals with the exceptions
+    #    editedMsg = json_data['result'][0]['edited_message']['text'] # This gets the edited message text 
+    #    editedMsgId = json_data['result'][0]['edited_message']['message_id'] # This gets the edited message ID
+    #    editedMsgdate = json_data['result'][0]['edited_message']['edit_date'] # This gets the edited message date
+    #    date = json_data['result'][0]['edited_message']['date'] # This gets the original message date
+    #    print(datetime.now())
+    #    print("An Exception has ocurred, we will keep going")
+    #    pass
+    #except NameError:
+    #    pass
 
     #Read DB File
     #readDbFile()
@@ -218,9 +350,9 @@ while True:
         #print(updated_date)
     
     else:
-        print('Record already exists')
+        print('Record already exists or is not the type of record that gets added to the DB')
 
-    #time.sleep(5)
+    #time.sleep(3)
 
     #db.close()
 
@@ -241,5 +373,5 @@ while True:
         #print(new_id)
         #print (json.dumps(json_data,ensure_ascii=False,indent=2))
 
-    #time.sleep(3)
+    time.sleep(5)
     #break
