@@ -13,3 +13,5 @@
 * Documentation
 * Rename Variables to something that makes sense
 * Why is the date I get from the API in a weird format?
+* Date is incorrect
+* Add replies

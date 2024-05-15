@@ -139,6 +139,7 @@ while True:
             first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
             chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
             chatName = json_data['result'][0]['message']['chat']['title'] # This gets the chat Name
+        # This is in case the user doesn't have a username
         elif 'text' in json_data['result'][0]['message']:
             print('This is a message')
             text = json_data['result'][0]['message']['text'] # This gets the message
@@ -165,12 +166,19 @@ while True:
     # This deals with normal messages in private chats
     elif 'message' in json_data['result'][0] and json_data['result'][0]['message']['chat']['type'] == 'private':
         print('This is anything in a private chat')
-        if 'text' in json_data['result'][0]['message']:
+        if 'text' in json_data['result'][0]['message'] and 'username' in json_data['result'][0]['message']['from']:
             print('This is a message')
             text = json_data['result'][0]['message']['text'] # This gets the message
             message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
             userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
             username = json_data['result'][0]['message']['from']['username'] # This gets the username
+            first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
+            chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
+        elif 'text' in json_data['result'][0]['message']:
+            print('This is a message')
+            text = json_data['result'][0]['message']['text'] # This gets the message
+            message_id = json_data['result'][0]['message']['message_id'] # This gets the message_id to avoid re-sending data
+            userid = json_data['result'][0]['message']['from']['id'] # This gets the user_id
             first_name = json_data['result'][0]['message']['from']['first_name'] # This gets the first_name
             chatid = json_data['result'][0]['message']['chat']['id'] # This gets the chat_id
         else:
